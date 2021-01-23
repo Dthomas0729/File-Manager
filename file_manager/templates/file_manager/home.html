@@ -1,0 +1,82 @@
+{% extends "file_manager/base.html" %}
+{% block content %}
+{% load static %}
+
+  <!-- Main jumbotron for a primary marketing message or call to action -->
+
+  <div class="jumbotron" style="background-color: #97BC8E">
+    <div class="jumbotron jumbotron-fluid text-center" style="background-color: #97BC8E">
+        <h1 class="display-3">File Manager</h1>
+    </div>
+      <div class="container">
+      <div class="row">
+        <div class="col-sm">
+
+              <div class="text-center">
+                <img src="{% static 'file_manager/img/new_order.png' %}" style="width: 100px; height: 100px" class="card-img-top" alt="...">
+                  <div class="card-body">
+                  <a type="button" href="/new_customer" class="btn btn-dark font-weight-bold text-center">New Customer Order</a>
+                    </div>
+              </div>
+        </div>
+        <div class="col-sm">
+
+            <div class="text-center">
+              <img src="{% static 'file_manager/img/update-icon.png' %}" style="width: 100px; height: 100px" class="card-img-top" alt="...">
+              <div class="card-body">
+              <a type="button" href="/orders" class="btn btn-dark font-weight-bold">Update Existing Order</a>
+                </div>
+            </div>
+
+        </div>
+        <div class="col-sm">
+
+            <div class="text-center">
+              <img src="{% static 'file_manager/img/save.png' %}" style="width: 100px; height: 100px" class="card-img-top" alt="...">
+               <div class="card-body">
+                 <a type="button" href="/orders" class="btn btn-dark font-weight-bold disabled">Update Existing Inventory</a>
+               </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+    </div>
+
+<div class="container">
+    <div class="row">
+      <div class="col-md-4">
+        <h2>Upcoming</h2>
+        <p> {% if upcoming_orders %}
+                {% for order in upcoming_orders %}
+                    <p><a href="/{{ order.invoice }}/">{{ order }}  </a></p>
+                {% endfor %}
+            {% else %}
+                <p> There are no upcoming orders.</p>
+            {% endif %}
+
+        <p><a class="btn btn-secondary" href="/orders" role="button">View more &raquo;</a></p>
+      </div>
+      <div class="col-md-4">
+        <h2>Recent</h2>
+        <p> {% if recent_orders %}
+              {% for order in recent_orders %}
+                <p><a href="/{{ order.invoice }}/">{{ order }}  </a></p>
+              {% endfor %}
+            {% else %}
+              <p>No rental orders are available.</p>
+            {% endif %}
+        <p><a class="btn btn-secondary" href="/orders" role="button">View more &raquo;</a></p>
+      </div>
+      <div class="col-md-4">
+        <h2>Storage</h2>
+        <p> To Be Filled </p>
+        <p><a class="btn btn-secondary disabled" href="#" role="button">View details &raquo;</a></p>
+      </div>
+    </div>
+
+    <hr>
+
+  </div>
+
+{% endblock content %}

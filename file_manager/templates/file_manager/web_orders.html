@@ -1,0 +1,36 @@
+{% extends "file_manager/base.html" %}
+
+{% block content %}
+{% load static %}
+
+<div class="jumbotron">
+    <div class="container">
+
+        {% for order in order_list %}
+        <div class="card w-100">
+            <div class="card-body">
+                <h4 class="card-title">Invoice: #{{ order.invoice }} {{ order.customer }}</h4>
+                  <p class="card-text">{{ order.date }}</p>
+                  <p class="card-text">{{ order.lg_boxes }} Large Boxes</p>
+                  <p class="card-text">{{ order.xl_boxes }} XL Boxes</p>
+                  <p class="card-text">{{ order.lg_dollies }} Large Dollies</p>
+                  <p class="card-text">{{ order.xl_dollies }} XL Dollies</p>
+                  <p class="card-text">{{ order.wardrobes }} Wardrobes</p>
+                  <p class="card-text">{{ order.labels }} Labels</p>
+                  <p class="card-text">{{ order.zip_ties }} Zip-Ties</p>
+                  <p class="card-text">{{ order.bins }} Bins</p>
+                  <p class="card-text">Rental Period: {{ order.rental_period }}</p>
+                  <p class="card-text">Delivery Date: {{ order.delivery_date }}</p>
+                  <p class="card-text">Pick Up Date: {{ order.pickup_date }}</p>
+                  <p class="card-text">Total: ${{ order.total_price }}0</p>
+                <a href="/{{ order.invoice }}" class="btn btn-primary">Save Order</a>
+                <a href="" class="btn btn-outline-dark">View</a>
+                <a href="" class="btn btn-outline-dark">Print</a>
+            </div>
+        </div>
+        {% endfor %}
+
+    </div>
+</div>
+
+{% endblock content %}

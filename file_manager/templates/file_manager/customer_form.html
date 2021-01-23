@@ -1,0 +1,21 @@
+{% extends "file_manager/base.html" %}
+
+{% block content %}
+
+
+  <!-- Main jumbotron for a primary marketing message or call to action -->
+    <div class="jumbotron" style="background-color: #97BC8E">
+        <div class="container">
+           <h2>New Customer</h2>
+           <form action="" method="post">
+                {% csrf_token %}
+                {{ form.as_p }}
+                <button type="submit" name="save">Save New Customer</button>
+            </form>
+            <p style="text-align: center">
+                <button class="btn btn-success btn-lg" type="submit" onclick="location.href='/new_order'">Continue&raquo;</button></p>
+        </div>
+  </div>
+
+
+{% endblock content %}

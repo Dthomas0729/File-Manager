@@ -1,0 +1,31 @@
+{% extends "file_manager/base.html" %}
+
+{% block content %}
+
+<div class="jumbotron" style="background-color: #97BC8E">
+        <h3 style="text-align: center" class="display-4">New Search</h3>
+        <h2 style="text-align: center">"{{ search }}"</h2>
+
+    {% if orders %}
+        {% for order in orders %}
+<div class="card w-100">
+  <div class="card-body">
+    <h5 class="card-title">#{{ order.invoice }} {{ order.customer }}: {{ order.date }}</h5>
+    <pre class="card-text">Ship To: {{ order.delivery_street }}, {{order.delivery_apt_suite_other }}
+      {{ order.delivery_city }}, {{ order.delivery_state }} {{ order.delivery_zip_code }}</pre>
+      <p>Total: ${{ order.total_price }}0</p>
+    <a href="/{{ order.invoice }}" class="btn btn-primary">View Order</a>
+    <a href="/update_order/{{ order.id }}" class="btn btn-outline-dark">Update</a>
+    <a href="/delete_order/{{ order.id }}" class="btn btn-outline-danger">Delete</a>
+  </div>
+</div>
+        {% endfor %}
+    {% else %}
+        <p>There are no orders that match your search. Please search with correct name and spelling.</p>
+    {% endif %}
+
+  </div>
+
+
+{% endblock %}
+

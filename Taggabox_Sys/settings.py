@@ -26,7 +26,7 @@ SECRET_KEY = config('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config('DEBUG')
 
-ALLOWED_HOSTS = ['https://taggabox-file-manager.herokuapp.com/']
+ALLOWED_HOSTS = ['taggabox-file-manager.herokuapp.com']
 
 
 # Application definition

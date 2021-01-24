@@ -9,12 +9,13 @@ from .forms import CreateUserForm, CustomerForm, RentalOrderForm
 from woocommerce import API
 from datetime import datetime, timedelta
 from openpyxl import Workbook, load_workbook
+from decouple import config
 import os
 
 wcapi = API(
-    url=os.environ.get('WCAPI_URL'),
-    consumer_key=os.environ.get('WCAPI_CONSUMER_KEY'),
-    consumer_secret=os.environ.get('WCAPI_CONSUMER_SECRET'),
+    url=config('WCAPI_URL'),
+    consumer_key=config('WCAPI_CONSUMER_KEY'),
+    consumer_secret=config('WCAPI_CONSUMER_SECRET'),
     version="wc/v3"
 )
 

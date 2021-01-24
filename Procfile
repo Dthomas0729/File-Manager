@@ -1,1 +1,1 @@
-web:gunicorn Taggabox_Sys.wsgi
+web: gunicorn Taggabox_Sys.wsgi

@@ -395,7 +395,7 @@ def delete_order(request, pk):
 
 @login_required(login_url='/login')
 def display_orders(request):
-    update_order_db()
+    # update_order_db()
     rental_orders = RentalOrder.objects.all().order_by('-invoice')
 
     context = {

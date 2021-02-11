@@ -11,6 +11,8 @@ from datetime import datetime, timedelta
 from openpyxl import Workbook, load_workbook
 from decouple import config
 import os
+import json
+
 
 wcapi = API(
     url=config('WCAPI_URL'),
@@ -22,8 +24,7 @@ wcapi = API(
 color_theme = '#065821'
 
 # COLLECT ORDER DATA
-orders = wcapi.get('orders')
-data = orders.json()
+data = wcapi.get('orders').json()
 
 customer_list = []
 order_list = []
@@ -240,7 +241,7 @@ def web_orders(request):
 
 @login_required(login_url='/login')
 def home(request):
-    update_order_db()
+    # update_order_db()
     search = request.POST.get('search')
 
     # THIS CREATES LIST OBJECT OF RECENT & UPCOMING ORDERS ORDERED BY DATE

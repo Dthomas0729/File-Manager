@@ -1,4 +1,4 @@
 .env
 db.sqlite3
 .idea
-file_manager_env
+venv

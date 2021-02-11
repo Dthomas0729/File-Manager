@@ -39,7 +39,7 @@ def save_customer(last_customer):
 
 
 def update_order_db():
-    for i in (data[:9]):
+    for i in data:
         current_order = i
         f_name = current_order['billing']['first_name']
         l_name = current_order['billing']['last_name']

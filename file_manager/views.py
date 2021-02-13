@@ -230,9 +230,8 @@ def update_order_db():
 
 # Create your views here.
 
-
-@csrf_exempt
 @require_POST
+@csrf_exempt
 def webhook(request):
     if request.method == 'POST':
         update_order_db()

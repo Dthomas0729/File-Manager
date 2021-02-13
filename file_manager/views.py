@@ -231,7 +231,9 @@ def update_order_db():
 # Create your views here.
 @require_POST
 def webhook(request):
-    print(wcapi.get("webhooks/2").json())
+    jsondata = request.body
+    newdata = json.loads(jsondata)
+    print(newdata)
     return HttpResponse('This is the webhook response')
 
 

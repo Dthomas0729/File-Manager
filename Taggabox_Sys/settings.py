@@ -130,4 +130,6 @@ USE_TZ = True
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATIC_URL = '/static/'
 
+WC_WEBHOOK_KEY = config('WC_WEBHOOK_KEY')
+
 django_heroku.settings(locals())

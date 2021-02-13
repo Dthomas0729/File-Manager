@@ -232,6 +232,7 @@ def update_order_db():
 
 
 @csrf_exempt
+@require_POST
 def webhook(request):
     if request.method == 'POST':
         update_order_db()

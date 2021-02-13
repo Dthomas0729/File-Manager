@@ -1,5 +1,6 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.http import HttpResponse
+from django.views.decorators.http import require_POST
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
@@ -228,6 +229,11 @@ def update_order_db():
 
 
 # Create your views here.
+@require_POST
+def webhook(request):
+    print(wcapi.get("webhooks/2").json())
+    return HttpResponse('This is the webhook response')
+
 
 def web_orders(request):
     context = {

@@ -14,6 +14,7 @@ urlpatterns = [
     path('new_search/', views.new_search, name='file_manager-new_search'),
     path('web_orders/', views.web_orders, name='file_manager-web_orders'),
     path('export/<int:invoice>', views.export_order_file, name='file_manager-export_order'),
+    path('webhook/', views.webhook),
 
     path('login/', views.login_page, name='file_manager-login'),
     path('register/', views.register_page, name='file_manager-register'),

@@ -235,8 +235,7 @@ def update_order_db():
 def webhook(request):
     if request.method == 'POST':
         update_order_db()
-        new_data = json.loads(request.POST['payload'])
-        return HttpResponse(new_data)
+        return HttpResponse('This Time it will work')
 
 
 def web_orders(request):

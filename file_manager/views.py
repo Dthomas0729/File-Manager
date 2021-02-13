@@ -1,6 +1,7 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.http import HttpResponse
 from django.views.decorators.http import require_POST
+from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
@@ -228,7 +229,9 @@ def update_order_db():
 
 
 # Create your views here.
-@require_POST
+
+
+@csrf_exempt
 def webhook(request):
     if request.method == 'POST':
         update_order_db()

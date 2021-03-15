@@ -1,21 +1,27 @@
-from django.shortcuts import render, get_object_or_404, redirect
-from django.http import HttpResponse
-from django.views.decorators.http import require_POST
-from django.views.decorators.csrf import csrf_exempt
-from django.contrib.auth.forms import UserCreationForm
-from django.contrib.auth import authenticate, login, logout
-from django.contrib import messages
-from django.contrib.auth.decorators import login_required
-from .models import Customer, RentalOrder
-from .forms import CreateUserForm, CustomerForm, RentalOrderForm
-from woocommerce import API
-from datetime import datetime, timedelta
-from openpyxl import Workbook, load_workbook
-from decouple import config
+from __future__ import print_function
+
 import os
-import json
+import os.path
 
+from decouple import config
+from django.contrib import messages
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.decorators import login_required
+from django.core.paginator import Paginator
+from django.http import HttpResponse
+from django.shortcuts import render, get_object_or_404, redirect
+from google.auth.transport.requests import Request
+from google.oauth2.credentials import Credentials
+from google_auth_oauthlib.flow import InstalledAppFlow
+from googleapiclient.discovery import build
+from openpyxl import load_workbook
+from woocommerce import API
 
+from webhooks import views as views
+from .forms import CreateUserForm, CustomerForm, RentalOrderForm
+from .models import Customer, RentalOrder
+
+# This will establish the WooCommerce API to make calls
 wcapi = API(
     url=config('WCAPI_URL'),
     consumer_key=config('WCAPI_CONSUMER_KEY'),
@@ -25,232 +31,49 @@ wcapi = API(
 
 color_theme = '#065821'
 
-# COLLECT ORDER DATA
-data = wcapi.get('orders').json()
 
-customer_list = []
-order_list = []
+# Function uses google calendar event json objects for delivery and pickup events
+def post_events(delivery, pickup):
 
+    SCOPES = ['https://www.googleapis.com/auth/calendar']
 
-def save_customer(last_customer):
-    for customer in reversed(Customer.objects.all()[:5]):
-        if last_customer == customer:
-            break
-
-    customer_list.append(last_customer)
-    last_customer.save()
-
-
-def update_order_db():
-    current_order = data[0]
-    f_name = current_order['billing']['first_name']
-    l_name = current_order['billing']['last_name']
-    phone = current_order['billing']['phone']
-    email = current_order['billing']['email']
-    street = current_order['billing']['address_1']
-    apt_suite_other = current_order['billing']['address_2']
-    city = current_order['billing']['city']
-    state = current_order['billing']['state']
-    zip_code = current_order['billing']['postcode']
-
-    last_customer = Customer(
-        first=f_name,
-        last=l_name,
-        phone=phone,
-        email=email,
-        street=street,
-        apt_suite_other=apt_suite_other,
-        city=city,
-        state=state,
-        zip_code=zip_code
-    )
-
-    try:
-        last_customer = Customer.objects.get(first=last_customer.first, last=last_customer.last)
-    except Customer.DoesNotExist:
-        last_customer.save()
-
-    invoice = current_order['id']
-    date = datetime.strptime(current_order['date_created'], '%Y-%m-%dT%H:%M:%S').date()
-    delivery_street = current_order['shipping']['address_1']
-    delivery_apt_suite_other = current_order['shipping']['address_2']
-    delivery_city = current_order['shipping']['city']
-    delivery_state = current_order['shipping']['state']
-    delivery_zip_code = current_order['shipping']['postcode']
-    pickup_address = current_order['meta_data'][4]['value']
-    total_price = current_order['total']
-
-    delivery_datetime = current_order['meta_data'][0]['value'] + current_order['meta_data'][1]['value']
-    try:
-        delivery_date = datetime.strptime(current_order['meta_data'][0]['value'], '%Y-%m-%d')
-    except ValueError:
-        try:
-            delivery_date = datetime.strptime(current_order['meta_data'][0]['value'], '%m/%d/%Y')
-        except ValueError:
-            try:
-                delivery_date = datetime.strptime(current_order['meta_data'][0]['value'], '%B %d, %Y')
-            except ValueError:
-                try:
-                    delivery_date = datetime.strptime(current_order['meta_data'][0]['value'], '%B %dth %Y')
-                except ValueError:
-                    try:
-                        delivery_date = datetime.strptime(current_order['meta_data'][0]['value'], '%B %st %Y')
-                    except ValueError:
-                        try:
-                            delivery_date = datetime.strptime(current_order['meta_data'][0]['value'], '%B %dnd %Y')
-                        except ValueError:
-                            delivery_date = datetime.strptime(current_order['meta_data'][0]['value'], '%B %drd %Y')
-
-    try:
-        delivery_datetime = datetime.strptime(delivery_datetime, '%Y-%m-%d%H:%M')
-    except ValueError:
-        try:
-            delivery_datetime = datetime.strptime(delivery_datetime, '%m/%d/%Y%H:%M %p')
-        except ValueError:
-            try:
-                delivery_datetime = datetime.strptime(delivery_datetime, '%B %dth %Y%H%p')
-            except ValueError:
-                try:
-                    delivery_datetime = datetime.strptime(delivery_datetime, '%B %d, %Y%H%p')
-                except ValueError:
-                    delivery_datetime = None
-
-    delivery_date = delivery_date.date()
-
-    # THIS LOCATES THE RENTAL PERIOD AND CREATES PICKUP DATETIME OBJECT
-    try:
-        rental_period = int(current_order['line_items'][0]['meta_data'][0]['value'][0])
-        if rental_period == 1:
-            pickup_date = delivery_date + timedelta(days=7)
-            rental_period = '1 Week'
-        elif rental_period == 2:
-            pickup_date = delivery_date + timedelta(days=14)
-            rental_period = '2 Weeks'
-        elif rental_period == 3:
-            pickup_date = delivery_date + timedelta(days=21)
-            rental_period = '3 Weeks'
-        elif rental_period == 4:
-            pickup_date = delivery_date + timedelta(days=28)
-            rental_period = '4 Weeks'
-    except IndexError:
-        rental_period = '1 Week'
-        pickup_date = delivery_date + timedelta(days=7)
-
-    for x in range(len(current_order['line_items'])):
-        if current_order['line_items'][x]['product_id'] == 1270:
-            lg_boxes = 70
-            xl_boxes = 10
-            lg_dollies = 4
-            xl_dollies = 2
-            labels = 80
-            zip_ties = 80
-            bins = 0
-            break
-        elif current_order['line_items'][x]['product_id'] == 1515:
-            lg_boxes = 50
-            xl_boxes = 10
-            lg_dollies = 3
-            xl_dollies = 1
-            labels = 60
-            zip_ties = 60
-            bins = 0
-            break
-        elif current_order['line_items'][x]['product_id'] == 1510:
-            lg_boxes = 35
-            xl_boxes = 5
-            lg_dollies = 2
-            xl_dollies = 0
-            labels = 40
-            zip_ties = 40
-            bins = 0
-        elif current_order['line_items'][x]['product_id'] == 1505:
-            lg_boxes = 18
-            xl_boxes = 2
-            lg_dollies = 1
-            xl_dollies = 0
-            labels = 20
-            zip_ties = 20
-            bins = 0
-            break
-        elif current_order['line_items'][x]['product_id'] == 1545:
-            lg_boxes = 1
-            xl_boxes = 0
-            lg_dollies = 0
-            xl_dollies = 0
-            labels = 0
-            zip_ties = 0
-            bins = 0
-            break
-        elif current_order['line_items'][x]['product_id'] == 1291:
-            lg_boxes = 0
-            xl_boxes = 0
-            lg_dollies = 0
-            xl_dollies = 0
-            labels = 0
-            zip_ties = 0
-            bins = current_order['line_items'][x]['quantity']
-            break
+    creds = None
+    # The file token.json stores the user's access and refresh tokens, and is
+    # created automatically when the authorization flow completes for the first
+    # time.
+    if os.path.exists('token.json'):
+        creds = Credentials.from_authorized_user_file('token.json', SCOPES)
+    # If there are no (valid) credentials available, let the user log in.
+    if not creds or not creds.valid:
+        if creds and creds.expired and creds.refresh_token:
+            creds.refresh(Request())
         else:
-            lg_boxes = 0
-            xl_boxes = 0
-            lg_dollies = 0
-            xl_dollies = 0
-            labels = 0
-            zip_ties = 0
-            bins = 0
+            flow = InstalledAppFlow.from_client_secrets_file('credentials.json', SCOPES)
+            creds = flow.run_local_server(port=0)
+    # Save the credentials for the next run
+    with open('token.json', 'w') as token:
+        token.write(creds.to_json())
 
-    last_order = RentalOrder(
-        invoice=invoice,
-        date=date,
-        customer=last_customer,
-        lg_boxes=lg_boxes,
-        xl_boxes=xl_boxes,
-        lg_dollies=lg_dollies,
-        xl_dollies=xl_dollies,
-        labels=labels,
-        zip_ties=zip_ties,
-        bins=bins,
-        delivery_date=delivery_date,
-        delivery_street=delivery_street,
-        delivery_apt_suite_other=delivery_apt_suite_other,
-        delivery_city=delivery_city,
-        delivery_state=delivery_state,
-        delivery_zip_code=delivery_zip_code,
-        rental_period=rental_period,
-        pickup_date=pickup_date,
-        total_price=total_price,
-        pickup_address=pickup_address,
-    )
-
-    try:
-        RentalOrder.objects.get(invoice=last_order.invoice)
-    except RentalOrder.DoesNotExist:
-        last_order.save()
+    service = build('calendar', 'v3', credentials=creds)
 
 
-# Create your views here.
+# Call the Calendar API
+    delivery = service.events().insert(calendarId='primary',
+                                       sendNotifications=False,
+                                       body=delivery).execute()
 
-@require_POST
-@csrf_exempt
-def webhook(request):
-    if request.method == 'POST':
-        update_order_db()
-        return HttpResponse('This Time it will work')
+    pickup = service.events().insert(calendarId='primary',
+                                     sendNotifications=False,
+                                     body=pickup).execute()
 
+    return [delivery.get('htmlLink'), pickup.get('htmlLink')]
 
-def web_orders(request):
-    context = {
-        'customer_list': customer_list,
-        'order_list': order_list,
-        'color_theme': color_theme
-    }
-
-    return render(request, 'file_manager/web_orders.html', context)
+# VIEW PAGES ARE BELOW
 
 
 @login_required(login_url='/login')
 def home(request):
-    # update_order_db()
+
     search = request.POST.get('search')
 
     # THIS CREATES LIST OBJECT OF RECENT & UPCOMING ORDERS ORDERED BY DATE
@@ -302,15 +125,55 @@ def order_details(request, invoice):
     return render(request, 'file_manager/order_details.html', context)
 
 
+# CREATE DELIVERY AND PICKUP EVENTS TO POST TO GOOGLE CALENDAR
+
+@login_required(login_url='/login')
+def create_events(request, invoice):
+
+    # RETRIEVE ORDER & CUSTOMER INFO FROM DJANGO DB USING
+    # INVOICE # FOR THE ORDER & CUSTOMER FIRST NAME
+    order = get_object_or_404(RentalOrder, invoice=invoice)
+    customer = get_object_or_404(Customer, first=order.customer.first)
+
+    # FUNCTIONS LOCATED IN WEBHOOKS.VIEWS TO CREATE EVENTS FOR DELIVERY & PICKUP
+    delivery = views.create_delivery_event(order, customer)
+    pickup = views.create_pickup_event(order, customer)
+
+    print(delivery)
+    print("")
+    print(pickup)
+
+    created_event_links = post_events(delivery, pickup)
+    print(created_event_links)
+
+    context = {
+        'delivery_link': created_event_links[0],
+        'pickup_link': created_event_links[1],
+        'order': order
+    }
+
+    return render(request, 'file_manager/create_events.html', context)
+
+
+# THIS ALLOWS FOR THE USER TO DOWNLOAD AN EXCEL FILE CONTAINING RENTAL ORDER & CUSTOMER INFORMATION
 def export_order_file(request, invoice):
+
+    # RETRIEVE ORDER DETAILS FROM DB
     details = get_object_or_404(RentalOrder, invoice=invoice)
 
+    # NOT EXACTLY SURE HOW THIS CODE WORKS
     response = HttpResponse(content_type='application/ms-excel')
+
+    # CREATES NEW FILENAME FOR WORKBOOK TO BE SAVED AS
     response['Content-Disposition'] = f'attachment; filename="{details.customer.full_name()}{details.invoice}.xlsx"'
 
     path = os.path.dirname(__file__)
     file = os.path.join(path, 'rental_order.xlsx')
+
+    # LOAD TEMPLATE WORKBOOK FROM FILE
     wb = load_workbook(file)
+
+    # LOAD WORKSHEET FROM WORKBOOK.ACTIVE AND ASSIGN ALL NECESSARY INFO INTO WS CELLS
     ws = wb.active
     ws['G3'] = details.date
     ws['G4'] = details.invoice
@@ -326,7 +189,7 @@ def export_order_file(request, invoice):
     ws['G16'] = details.pickup_date
     ws['B18'] = details.rental_period
     ws['G18'] = details.was_delivered()
-    ws['G34'] = details.total_price
+    # ws['G34'] = details.total_price
     ws['B21'] = details.lg_boxes
     ws['B22'] = details.xl_boxes
     ws['B23'] = details.lg_dollies
@@ -335,6 +198,7 @@ def export_order_file(request, invoice):
     ws['B26'] = details.zip_ties
     ws['B27'] = details.bins
 
+    # SAVE WORKBOOK INTO NEW FILENAME SAVED INSIDE RESPONSE VARIABLE
     wb.save(response)
     return response
 
@@ -349,6 +213,7 @@ def customer_details(request):
     return render(request, 'file_manager/customer_details.html', context)
 
 
+# HANDLES USER INPUT FOR CUSTOMER FORM TO SAVE NEW CUSTOMER INTO DB
 @login_required(login_url='/login')
 def customer_form(request):
     form = CustomerForm()
@@ -363,6 +228,7 @@ def customer_form(request):
     return render(request, 'file_manager/customer_form.html', context)
 
 
+# HANDLES USER INPUT FOR RENTAL ORDER FORM TO SAVE NEW ORDER INTO DB
 @login_required(login_url='/login')
 def rental_order_form(request):
     form = RentalOrderForm()
@@ -376,8 +242,10 @@ def rental_order_form(request):
     return render(request, 'file_manager/rental_order_form.html', context)
 
 
+# HANDLES USER INPUT FOR UPDATING EXISTING ORDERS AND SAVES NEW INFO INTO DB
 @login_required(login_url='/login')
 def update_order_form(request, pk):
+
     order = RentalOrder.objects.get(id=pk)
     form = RentalOrderForm(instance=order)
 
@@ -402,13 +270,25 @@ def delete_order(request, pk):
     return render(request, 'file_manager/delete.html', context)
 
 
+# THIS VIEW LISTS MOST RECENT RENTAL ORDERS
 @login_required(login_url='/login')
 def display_orders(request):
-    # update_order_db()
+    # data = wcapi.get('orders?page=4').json()
+
+    # for order in range(len(data)):
+    #     views.update_order_db(order)
+
+    # RETRIEVE RENTAL ORDER LIST FROM DJANGO DB ORDERED BY MOST RECENT INVOICE
     rental_orders = RentalOrder.objects.all().order_by('-invoice')
 
+    # PAGINATOR CLASS WILL LIST ORDERS 10 PER PAGE
+    p = Paginator(rental_orders, 10)
+    page_num = request.GET.get('page')
+    page = p.get_page(page_num)
+
     context = {
-        'rental_orders': rental_orders,
+        'page_obj': p,
+        'page': page
     }
     return render(request, 'file_manager/all_orders.html', context)
 
@@ -462,3 +342,4 @@ def logout_user(request):
     logout(request)
 
     return redirect('/login')
+

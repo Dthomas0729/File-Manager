@@ -35,8 +35,6 @@ class RentalOrder(models.Model):
     lg_boxes = models.IntegerField(default=0)
     xl_boxes = models.IntegerField(default=0)
     lg_dollies = models.IntegerField(default=0)
-    xl_dollies = models.IntegerField(default=0)
-    wardrobes = models.IntegerField(default=0)
     labels = models.IntegerField(default=0)
     zip_ties = models.IntegerField(default=0)
     bins = models.IntegerField(default=0)

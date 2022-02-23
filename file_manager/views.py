@@ -530,8 +530,8 @@ def display_orders(request):
 
 
 @login_required(login_url='/login')
-def storage(request):
-    return render(request, 'file_manager/storage.html')
+def inventory(request):
+    return render(request, 'file_manager/inventory.html')
 
 
 def login_page(request):

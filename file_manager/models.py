@@ -35,8 +35,6 @@ class RentalOrder(models.Model):
     lg_boxes = models.IntegerField(default=0)
     xl_boxes = models.IntegerField(default=0)
     lg_dollies = models.IntegerField(default=0)
-    xl_dollies = models.IntegerField(default=0)
-    wardrobes = models.IntegerField(default=0)
     labels = models.IntegerField(default=0)
     zip_ties = models.IntegerField(default=0)
     bins = models.IntegerField(default=0)
@@ -156,4 +154,29 @@ class RentalOrder(models.Model):
     #                f' {self.pickup_city} {self.pickup_state} {self.pickup_zip_code}'
     #     else:
     #         return f'{self.pickup_street}, {self.pickup_city}, {self.pickup_state} {self.pickup_zip_code}'
+
+class Location(models.Model):
+    zip_code = models.CharField(max_length=16)
+    name = models.CharField(max_length=255)
+    description = models.TextField
+
+    def __str__(self):
+        return f'{self.name}'
+
+class ItemType(models.Model):
+    type_name = models.CharField(max_length=64)
+
+    def __str__(self):
+        return f'{self.type_name}'
+
+class Item(models.Model):
+    item_name = models.CharField(max_length=100)
+    item_type_id = models.ForeignKey(ItemType, on_delete=models.CASCADE)
+    location_id = models.ForeignKey(Location, on_delete=models.CASCADE)
+    item_location = models.CharField(max_length=100)
+    description = models.CharField(max_length=100)
+    price_per_unit = models.DecimalField(max_digits=10, decimal_places=2)
+    unit_id = models.CharField(max_length=100)
+    available = models.CharField(max_length=100)
+
 

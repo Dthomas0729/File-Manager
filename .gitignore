@@ -4,3 +4,4 @@ db.sqlite3
 venv
 token.json
 credentials.json
+__pycache__

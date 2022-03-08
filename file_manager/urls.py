@@ -26,6 +26,5 @@ urlpatterns = [
     path('password_reset_confirm/<uidb64>/<token>', auth_views.PasswordResetConfirmView.as_view(), name='password_reset_confirm'),
     path('password_reset_complete/', auth_views.PasswordResetCompleteView.as_view(), name='password_reset_complete'),
 
-    path('webhook/test-order', views.test_order, name='webhook_order'),
-
+    path('webhook/new-order', views.new_order_webhook, name='new_order_webhook'),
 ]

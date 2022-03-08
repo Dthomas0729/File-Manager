@@ -58,7 +58,7 @@ wcapi = API(
 data = wcapi.get('orders').json()
 
 def update_order_db():
-    current_order = data[3]
+    current_order = data[0]
     f_name = current_order['billing']['first_name']
     l_name = current_order['billing']['last_name']
     phone = current_order['billing']['phone']
@@ -345,14 +345,13 @@ email: {customer.email}
 
 
 
-def test_order(request):
+def new_order_webhook(request):
     order, customer = update_order_db()
 
     delivery = create_delivery_event(order, customer)
     pickup = create_pickup_event(order, customer)
 
     # post_events(delivery, pickup)
-
     return HttpResponse('Hello, world. This is the webhook response.')
 
 # THIS ALLOWS FOR THE USER TO DOWNLOAD AN EXCEL FILE CONTAINING RENTAL ORDER & CUSTOMER INFORMATION

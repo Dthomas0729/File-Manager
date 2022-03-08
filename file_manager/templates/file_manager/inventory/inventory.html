@@ -1,0 +1,62 @@
+{% extends "file_manager/base.html" %}
+
+{% block content %}
+
+<div class="jumbotron" style="background-color: #97BC8E">
+
+    <h1>Inventory</h1>
+
+    <div class="inventory-actions">
+        <button>
+            SHIP
+        </button>
+ 
+        <button>
+            RETURN
+        </button>
+
+        <button>
+            UPDATE
+        </button>
+  
+        <button>
+            NEW
+        </button>
+    </div>    
+    
+    <section class="main-inventory-content">
+        <table>
+            <thead>
+                <tr>
+                    <th>Item Name</th>
+                    <th>ID / SKU</th>
+                    <th>Location</th>
+                    <th>Description</th>
+                    <th>Price Per Unit</th>
+                    <th>Quantity</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>text1.1</td>
+                    <td>text1.2</td>
+                    <td>text1.3</td>
+                </tr>
+                <tr>
+                    <td>text2.1</td>
+                    <td>text2.2</td>
+                    <td>text2.3</td>
+                </tr>
+                <tr>
+                    <td>text3.1</td>
+                    <td>text3.2</td>
+                    <td>text3.3</td>
+                </tr>
+                <tr>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+    
+</div>
+    {% endblock content %}

@@ -62,7 +62,6 @@ class RentalOrder(models.Model):
         Lg Boxes: {self.lg_boxes}\n
         Xl Boxes: {self.xl_boxes}\n
         Lg Dollies: {self.lg_dollies}\n
-        Xl Dollies: {self.xl_dollies}\n
         Labels: {self.labels}\n
         Zip-Ties: {self.zip_ties}\n 
         Bins: {self.bins}\n

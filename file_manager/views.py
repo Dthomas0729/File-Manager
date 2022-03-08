@@ -11,6 +11,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.http import HttpResponse
+from django.core.mail import send_mail
 from django.shortcuts import render, get_object_or_404, redirect
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
@@ -24,6 +25,28 @@ from datetime import datetime, timedelta
 from .forms import CreateUserForm, CustomerForm, RentalOrderForm
 from .models import Customer, RentalOrder
 
+def handle_error_email(order):
+
+    send_mail(
+    'Order Entered Incorrectly, PLEASE FIX!',
+    'Here is the message.',
+    'slicctech@gmail.com',
+    ['d.thomas0729@gmail.com'],
+    fail_silently=False,
+)
+
+def new_order_email(order):
+    send_mail(
+    'New Order Added!',
+    f''' Here is the order:
+    {order.details()}
+    http://127.0.0.1:8000/{order.invoice}
+    ''',
+    'slicctech@gmail.com',
+    ['d.thomas0729@gmail.com'],
+    fail_silently=False,
+)
+
 # This will establish the WooCommerce API to make calls
 wcapi = API(
     url=config('WCAPI_URL'),
@@ -35,7 +58,7 @@ wcapi = API(
 data = wcapi.get('orders').json()
 
 def update_order_db():
-    current_order = data[4]
+    current_order = data[3]
     f_name = current_order['billing']['first_name']
     l_name = current_order['billing']['last_name']
     phone = current_order['billing']['phone']
@@ -70,7 +93,7 @@ def update_order_db():
     delivery_city = current_order['shipping']['city']
     delivery_state = current_order['shipping']['state']
     delivery_zip_code = current_order['shipping']['postcode']
-    pickup_address = current_order['meta_data'][4]['value']
+    pickup_address = current_order['meta_data'][5]['value']
     total_price = current_order['total']
 
     delivery_datetime = current_order['meta_data'][0]['value'] + current_order['meta_data'][1]['value']
@@ -126,40 +149,44 @@ def update_order_db():
             pickup_date = delivery_date + timedelta(days=28)
             rental_period = '4 Weeks'
     except IndexError:
+        handle_error_email()
         rental_period = '1 Week'
-        pickup_date = delivery_date + timedelta(days=7)
+        pickup_date = delivery_date + timedelta(days=1)
+    except KeyError:
+        handle_error_email()
+        rental_period = '1 Week'
+        pickup_date = delivery_date + timedelta(days=1)
 
     for x in range(len(current_order['line_items'])):
         if current_order['line_items'][x]['product_id'] == 1270:
-            lg_boxes = 70
+            lg_boxes = 75
             xl_boxes = 10
             lg_dollies = 4
-            xl_dollies = 2
-            labels = 80
-            zip_ties = 80
+            labels = 85
+            zip_ties = 85
             bins = 0
             break
         elif current_order['line_items'][x]['product_id'] == 1515:
-            lg_boxes = 50
+            lg_boxes = 55
             xl_boxes = 10
             lg_dollies = 3
-            xl_dollies = 1
-            labels = 60
-            zip_ties = 60
+            labels = 65
+            zip_ties = 65
             bins = 0
             break
         elif current_order['line_items'][x]['product_id'] == 1510:
-            lg_boxes = 35
+            lg_boxes = 40
             xl_boxes = 5
             lg_dollies = 2
-            xl_dollies = 0
-            labels = 40
-            zip_ties = 40
+            labels = 45
+            zip_ties = 45
             bins = 0
         elif current_order['line_items'][x]['product_id'] == 1505:
-   
-            labels = 20
-            zip_ties = 20
+            lg_boxes = 22
+            xl_boxes = 3
+            lg_dollies = 2
+            labels = 25
+            zip_ties = 25
             bins = 0
             break
         elif current_order['line_items'][x]['product_id'] == 1545:
@@ -217,6 +244,7 @@ def update_order_db():
 
     except RentalOrder.DoesNotExist:
         last_order.save()
+        new_order_email(last_order)
         return [last_order, last_customer]
 
 
@@ -347,8 +375,8 @@ def export_order_file(request, invoice):
 
     # LOAD WORKSHEET FROM WORKBOOK.ACTIVE AND ASSIGN ALL NECESSARY INFO INTO WS CELLS
     ws = wb.active
-    ws['G3'] = details.date
-    ws['G4'] = details.invoice
+    ws['F3'] = details.date
+    ws['F4'] = details.invoice
     ws['C7'] = details.customer.full_name()
     ws['C8'] = details.customer.street
     ws['C9'] = f'{details.customer.city}, {details.customer.state} {details.customer.zip_code}'
@@ -358,9 +386,9 @@ def export_order_file(request, invoice):
     ws['F8'] = f'{details.delivery_city}, {details.delivery_state} {details.delivery_zip_code}'
     ws['F11'] = details.pickup_address
     ws['F16'] = details.delivery_date
-    ws['G16'] = details.pickup_date
+    ws['F18'] = details.pickup_date
     ws['B18'] = details.rental_period
-    ws['G18'] = details.was_delivered()
+    # ws['G18'] = details.was_delivered()
     # ws['G34'] = details.total_price
     ws['B21'] = details.lg_boxes
     ws['B22'] = details.xl_boxes
@@ -431,7 +459,7 @@ def order_details(request, invoice):
     context = {
         'details': details,
     }
-    return render(request, 'file_manager/order_details.html', context)
+    return render(request, 'file_manager/orders/order_details.html', context)
 
 
 # CREATE DELIVERY AND PICKUP EVENTS TO POST TO GOOGLE CALENDAR
@@ -475,7 +503,7 @@ def rental_order_form(request):
             form.save()
 
     context = {'form': form}
-    return render(request, 'file_manager/rental_order_form.html', context)
+    return render(request, 'file_manager/orders/rental_order_form.html', context)
 
 
 # HANDLES USER INPUT FOR UPDATING EXISTING ORDERS AND SAVES NEW INFO INTO DB
@@ -491,7 +519,7 @@ def update_order_form(request, pk):
             form.save()
             return redirect('/orders')
     context = {'form': form}
-    return render(request, 'file_manager/update_order.html', context)
+    return render(request, 'file_manager/orders/update_order.html', context)
 
 
 @login_required(login_url='/login')
@@ -503,7 +531,7 @@ def delete_order(request, pk):
         return redirect('/orders')
 
     context = {'order': order}
-    return render(request, 'file_manager/delete.html', context)
+    return render(request, 'file_manager/orders/delete.html', context)
 
 
 # THIS VIEW LISTS MOST RECENT RENTAL ORDERS
@@ -526,12 +554,12 @@ def display_orders(request):
         'page_obj': p,
         'page': page
     }
-    return render(request, 'file_manager/all_orders.html', context)
+    return render(request, 'file_manager/orders/all_orders.html', context)
 
 
 @login_required(login_url='/login')
 def inventory(request):
-    return render(request, 'file_manager/inventory.html')
+    return render(request, 'file_manager/inventory/inventory.html')
 
 
 def login_page(request):
@@ -549,7 +577,7 @@ def login_page(request):
             else:
                 messages.info(request, 'Username OR Password is incorrect')
 
-        return render(request, 'file_manager/login.html')
+        return render(request, 'file_manager/registration/login.html')
 
 
 
@@ -572,7 +600,7 @@ def register_page(request):
         context = {
             'form': form,
         }
-        return render(request, 'file_manager/register.html', context)
+        return render(request, 'file_manager/registration/register.html', context)
 
 
 def logout_user(request):

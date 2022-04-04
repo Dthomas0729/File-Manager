@@ -30,7 +30,7 @@ def handle_error_email(order):
     send_mail(
     'Order Entered Incorrectly, PLEASE FIX!',
     'Here is the message.',
-    'slicctech@gmail.com',
+    'slicctech@gmail.com', 
     ['d.thomas0729@gmail.com'],
     fail_silently=False,
 )
@@ -226,6 +226,7 @@ def update_order_db():
         labels=labels,
         zip_ties=zip_ties,
         bins=bins,
+        handtrucks=0,
         delivery_date=delivery_date,
         delivery_street=delivery_street,
         delivery_apt_suite_other=delivery_apt_suite_other,
@@ -396,6 +397,7 @@ def export_order_file(request, invoice):
     ws['B25'] = details.labels
     ws['B26'] = details.zip_ties
     ws['B27'] = details.bins
+    ws['B28'] = details.handtrucks
 
     # SAVE WORKBOOK INTO NEW FILENAME SAVED INSIDE RESPONSE VARIABLE
     wb.save(response)

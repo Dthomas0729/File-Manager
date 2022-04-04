@@ -1,1 +1,0 @@
-web: gunicorn Taggabox_Sys.wsgi

@@ -5,3 +5,8 @@ venv
 token.json
 credentials.json
 __pycache__
+
+# Elastic Beanstalk Files
+.elasticbeanstalk/*
+!.elasticbeanstalk/*.cfg.yml
+!.elasticbeanstalk/*.global.yml

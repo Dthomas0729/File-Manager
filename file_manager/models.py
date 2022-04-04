@@ -38,6 +38,7 @@ class RentalOrder(models.Model):
     labels = models.IntegerField(default=0)
     zip_ties = models.IntegerField(default=0)
     bins = models.IntegerField(default=0)
+    handtrucks = models.IntegerField(default=0)
     rental_period = models.CharField(max_length=100)
     delivery_date = models.DateField('delivery date')
     delivery_street = models.CharField(max_length=100)
@@ -65,6 +66,7 @@ class RentalOrder(models.Model):
         Labels: {self.labels}\n
         Zip-Ties: {self.zip_ties}\n 
         Bins: {self.bins}\n
+        Handtrucks: {self.handtrucks}\n
         Rental Period: {self.rental_period}
         Delivery Date: {self.delivery_date}
         Pickup Date: {self.pickup_date}
@@ -127,6 +129,7 @@ class RentalOrder(models.Model):
         ws['B26'] = self.labels
         ws['B27'] = self.zip_ties
         ws['B28'] = self.bins
+        ws['B29'] = self.handtrucks
         ws['C21'] = 'LG Boxes'
         ws['C22'] = 'XL Boxes'
         ws['C23'] = 'LG Dollies'
@@ -135,6 +138,7 @@ class RentalOrder(models.Model):
         ws['C26'] = 'Labels'
         ws['C27'] = 'Zip Ties'
         ws['C28'] = 'Bins'
+        ws['C29'] = 'Handtrucks'
 
         wb.save(response)
         return response

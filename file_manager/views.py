@@ -57,6 +57,34 @@ wcapi = API(
 
 data = wcapi.get('orders').json()
 
+def create_customer(data):
+    f_name = data['billing']['first_name']
+    l_name = data['billing']['last_name']
+    phone = data['billing']['phone']
+    email = data['billing']['email']
+    street = data['billing']['address_1']
+    apt_suite_other = data['billing']['address_2']
+    city = data['billing']['city']
+    state = data['billing']['state']
+    zip_code = data['billing']['postcode']
+
+    last_customer = Customer(
+        first=f_name,
+        last=l_name,
+        phone=phone,
+        email=email,
+        street=street,
+        apt_suite_other=apt_suite_other,
+        city=city,
+        state=state,
+        zip_code=zip_code
+    )
+
+    try:
+        last_customer = Customer.objects.get(first=last_customer.first, last=last_customer.last)
+    except Customer.DoesNotExist:
+        last_customer.save()
+
 def update_order_db():
     current_order = data[0]
     f_name = current_order['billing']['first_name']
@@ -318,7 +346,7 @@ def create_pickup_event(last_order, customer):
         'location': f'{last_order.pickup_address}',
         'description': f'''{customer.first} {customer.last}
 phone: {customer.phone}
-Address {last_order.pickup_address}
+Address: {last_order.pickup_address}
 email: {customer.email}
 {last_order.lg_boxes} Lg Boxes                                                                      
 {last_order.xl_boxes} Xl Boxes

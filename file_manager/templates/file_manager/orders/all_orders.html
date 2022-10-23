@@ -4,6 +4,7 @@
 
 <div class="jumbotron" style="background-color: #97BC8E">
 
+  <h2>Active orders</h2>
   <nav aria-label="Page navigation">
       <ul class="pagination justify-content-end">
 
@@ -32,19 +33,20 @@
     </nav>
 
   <p></p>
-    {% for order in page.object_list %}
 
-<div class="card w-100">
-  <div class="card-body">
-    <h5 class="card-title">#{{ order.invoice }} {{ order.customer }}: {{ order.date }}</h5>
-    <pre class="card-text">Ship To: {{ order.delivery_street }}, {{order.delivery_apt_suite_other }}
-      {{ order.delivery_city }}, {{ order.delivery_state }} {{ order.delivery_zip_code }}</pre>
-      <p>Total: ${{ order.total_price }}0</p>
-    <a href="/{{ order.invoice }}" class="btn btn-primary">View Order</a>
-    <a href="/update_order/{{ order.id }}" class="btn btn-outline-dark">Update</a>
-    <a href="/delete_order/{{ order.id }}" class="btn btn-outline-danger">Delete</a>
-  </div>
-</div>
+    {% for order in page.object_list %}
+    <div class="card w-100">
+      <div class="card-body">
+        <h5 class="card-title">#{{ order.invoice }} {{ order.customer }}: {{ order.date }}</h5>
+        <pre class="card-text">Ship To: {{ order.delivery_street }}, {{order.delivery_apt_suite_other }}
+          {{ order.delivery_city }}, {{ order.delivery_state }} {{ order.delivery_zip_code }}</pre>
+          <p>Total: ${{ order.total_price }}0</p>
+        <a href="/{{ order.invoice }}" class="btn btn-primary">View Order</a>
+        <a href="/update_order/{{ order.id }}" class="btn btn-outline-dark">Update</a>
+        <a href="/delete_order/{{ order.id }}" class="btn btn-outline-danger">Delete</a>
+      </div>
+    </div>
+
     {% endfor %}
 
   <p></p>

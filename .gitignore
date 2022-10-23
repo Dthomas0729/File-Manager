@@ -5,6 +5,8 @@ venv
 token.json
 credentials.json
 __pycache__
+file_manager/__pycache__
+Taggabox_Sys/__pycache__
 
 # Elastic Beanstalk Files
 .elasticbeanstalk/*

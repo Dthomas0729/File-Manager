@@ -1,60 +1,65 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
   <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <meta name="description" content="">
-    <meta name="author" content="Mark Otto, Jacob Thornton, and Bootstrap contributors">
-    <meta name="generator" content="Jekyll v4.1.1">
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, shrink-to-fit=no"
+    />
+    <meta name="description" content="" />
+    <meta name="generator" content="Jekyll v4.1.1" />
     <title>Taggabox File Manager</title>
 
     {% load static %}
-    <link rel="stylesheet" href="{% static 'file_manager/css/bootstrap.min.css' %}" type="text/css"/>
-
-    <!-- Bootstrap core CSS -->
-
-    <style>
-      .bd-placeholder-img {
-        font-size: 1.125rem;
-        text-anchor: middle;
-        -webkit-user-select: none;
-        -moz-user-select: none;
-        -ms-user-select: none;
-        user-select: none;
-      }
-
-      @media (min-width: 768px) {
-        .bd-placeholder-img-lg {
-          font-size: 3.5rem;
-        }
-      }
-    </style>
-    <!-- Custom styles for this template -->
-    <link rel="stylesheet" href="{% static 'file_manager/css/bootstrap.min.css' %}" type="text/css">
+    <link
+      rel="stylesheet"
+      href="{% static 'file_manager/css/styles.css' %}"
+      type="text/css"
+    />
   </head>
 
-<body class="text-center" style="background-color: #97BC8E">
-<div class="card mx-auto my-auto" style="width: 450px">
-  <div class="card-body">
-    <form method="POST" action="">
-      {% csrf_token %}
-  <div class="form-group">
-       <img class="mb-4" src="{% static 'file_manager/img/logo.png' %}" alt="" width="72" height="72">
-      <h1 class="h3 mb-3 font-weight-normal text-center">LOGIN</h1>
-    <input type="text" name="username" class="form-control" placeholder="Username...">
-  </div>
-  <div class="form-group">
-    <input type="password" name="password" class="form-control" placeholder="Password...">
-  </div>
+  <body class="login-body">
+    <img
+      class="mb-4"
+      src="{% static 'file_manager/img/logo.png' %}"
+      alt=""
+      width="72"
+      height="72"
+    />
+    <div class="login-card">
+      <form class="login-form" method="POST" action="">
+        {% csrf_token %}
+        <h1>LOGIN</h1>
+        <br>
 
-      {% for message in messages %}
-      <p id="messages">{{ message }}</p>
-      {% endfor %}
+        <div class="username-container">
+          <input
+            type="text"
+            name="username"
+            class="form-control"
+            placeholder="Username..."
+          />
+        </div>
 
-  <button type="submit" class="btn btn-primary">Login</button>
-        <p class="mt-5 mb-3 text-muted">Forgot Your Username or Password? <a href="{% url 'password_reset' %}" class="ml-2">Reset Password</a></p>
-</form>
-  </div>
-</div>
+        <div class="password-container">
+          <input
+            type="password"
+            name="password"
+            class="form-control"
+            placeholder="Password..."
+          />
+        </div>
 
-</body>
+        {% for message in messages %}
+        <p id="messages">{{ message }}</p>
+        {% endfor %}
+
+        <button type="submit" class="btn btn-primary">Login</button>
+        <p class="mt-5 mb-3 text-muted">
+          Forgot Your Username or Password?
+          <a href="{% url 'password_reset' %}" class="ml-2">Reset Password</a>
+        </p>
+      </form>
+    </div>
+  </body>
+</html>

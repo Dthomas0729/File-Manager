@@ -11,6 +11,10 @@
     justify-content: flex-end;
 }
 
+.login-body img {
+    width: 30%;
+}
+
 .login-card {
     display: flex;
     flex-direction: column;
